@@ -56,12 +56,14 @@ def create_trained_policy(
     model = train_config.model.load(_model.restore_params(checkpoint_dir / "params", dtype=jnp.bfloat16))
 
     data_config = train_config.data.create(train_config.assets_dirs, train_config.model)
+    # print("data_config: ", data_config)
     if norm_stats is None:
         # We are loading the norm stats from the checkpoint instead of the config assets dir to make sure
         # that the policy is using the same normalization stats as the original training process.
         if data_config.asset_id is None:
             raise ValueError("Asset id is required to load norm stats.")
-        norm_stats = _checkpoints.load_norm_stats(checkpoint_dir / "assets", data_config.asset_id)
+        norm_stats = _checkpoints.load_norm_stats(checkpoint_dir / "assets", "trossen_mobile")
+        # norm_stats = _checkpoints.load_norm_stats(checkpoint_dir / "assets", data_config.asset_id)
 
     return _policy.Policy(
         model,

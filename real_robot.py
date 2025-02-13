@@ -9,8 +9,8 @@ import tyro
 
 import os
 print(os.getcwd())
-from examples.aloha_real import env as _env
-
+# from examples.aloha_real import env as _env
+from examples.aloha_real import env_ros2 as _env
 
 @dataclasses.dataclass
 class Args:
