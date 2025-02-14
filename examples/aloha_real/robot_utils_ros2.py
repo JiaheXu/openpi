@@ -108,11 +108,11 @@ class ImageRecorder:
     def get_images(self):
         image_dict = {}
         for cam_name in self.camera_names:
-            # while getattr(self, f"{cam_name}_timestamp") <= self.cam_last_timestamps[cam_name]:
-            #     print("cam_name: ", cam_name)
-            #     print("timestamp: ", getattr(self, f"{cam_name}_timestamp") )
-            #     print("last_stamp: ", self.cam_last_timestamps[cam_name] )
-            #     time.sleep(0.00001)
+            while getattr(self, f"{cam_name}_timestamp") <= self.cam_last_timestamps[cam_name]:
+                print("cam_name: ", cam_name)
+                print("timestamp: ", getattr(self, f"{cam_name}_timestamp") )
+                print("last_stamp: ", self.cam_last_timestamps[cam_name] )
+                time.sleep(0.00001)
             print("cam_name: ", cam_name)
             print("timestamp: ", getattr(self, f"{cam_name}_timestamp") )
             print("last_stamp: ", self.cam_last_timestamps[cam_name] )

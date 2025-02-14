@@ -40,7 +40,7 @@ class Args:
 
 
 
-class Runtime(InterbotixRobotNode):
+class Runtime(Node):
     """The core module orchestrating interactions between key components of the system."""
 
     def __init__(
@@ -52,7 +52,7 @@ class Runtime(InterbotixRobotNode):
         
         action_horizon = 25
         num_episodes = 1
-        max_episode_steps = 1000
+        max_episode_steps = 1
 
         self._environment = _env.AlohaRealEnvironment(node = self, reset_position=metadata.get("reset_pose"))
         self._agent =_policy_agent.PolicyAgent(
@@ -66,12 +66,12 @@ class Runtime(InterbotixRobotNode):
 
         max_hz=50
 
-        print("self._environment: ", self._environment )
+        # print("self._environment: ", self._environment )
 
         self._subscribers = subscribers
         self._max_hz = max_hz
         self._num_episodes = num_episodes
-        self._max_episode_steps = 1000
+        self._max_episode_steps = max_episode_steps
 
         self._in_episode = False
         self._episode_steps = 0
@@ -79,29 +79,30 @@ class Runtime(InterbotixRobotNode):
         timer_period = 1  # seconds
         # print("waiting")
         # time.sleep(4)
-        self.timer = self.create_timer(timer_period, self.run)
+        # self.timer = self.create_timer(timer_period, self.run)
 
-        # self.timer_thread = threading.Thread(target=self.run, daemon=True)
-        # self.timer_thread.start()
+        self.timer_thread = threading.Thread(target=self.run, daemon=True)
+        self.timer_thread.start()
 
     def timer_loop(self):
         while rclpy.ok():
             self.get_logger().info('Timer callback started')
-            time.sleep(5)  # Simulate long computation
+            time.sleep(1)  # Simulate long computation
             self.get_logger().info('Timer callback ended')
-            time.sleep(2)  # Wait for next timer execution
+            time.sleep(1)  # Wait for next timer execution
 
     def run(self) -> None:
 
         """Runs the runtime loop continuously until stop() is called or the environment is done."""
-        for _ in range(self._num_episodes):
+        # for _ in range(self._num_episodes):
+        while rclpy.ok():
+            self.get_logger().info('Timer callback started')
+            time.sleep(1)  # Simulate long computation
             self._run_episode()
-            # print("in run!!!!!!!!!!!!!!!!!!!!!!")
-            # time.sleep(1)
-            # print("end run!!!!!!!!!!!!!!!!!!!!!!")
+            self.get_logger().info('Timer callback ended')
 
         # # Final reset, this is important for real environments to move the robot to its home position.
-        self._environment.reset()
+        # self._environment.reset()
 
 
     def mark_episode_complete(self) -> None:
@@ -142,6 +143,7 @@ class Runtime(InterbotixRobotNode):
         """A single step of the runtime loop."""
         observation = self._environment.get_observation()
         action = self._agent.get_action(observation)
+        print("action: ", action)
         self._environment.apply_action(action)
 
         for subscriber in self._subscribers:
@@ -170,11 +172,16 @@ def main() -> None:
     # node = create_interbotix_global_node('aloha')
     node = Runtime( metadata , ws_client_policy)
 
-    executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(node)
+    # executor = rclpy.executors.MultiThreadedExecutor()
+    # executor.add_node(node)
+
+    # try:
+    #     executor.spin()
+    # except KeyboardInterrupt:
+    #     pass
 
     try:
-        executor.spin()
+        rclpy.spin(node)
     except KeyboardInterrupt:
         pass
 

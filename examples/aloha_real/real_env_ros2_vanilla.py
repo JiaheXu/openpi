@@ -48,21 +48,21 @@ class RealEnv:
         self._reset_position = reset_position[:6] if reset_position else DEFAULT_RESET_POSITION
 
         self.node = node
-        # create_interbotix_global_node('aloha')
-        # self.puppet_bot_left = InterbotixManipulatorXS(
-        #     robot_model="vx300s",
-        #     robot_name="follower_left",
-        #     node=self.node,
-        #     iterative_update_fk=False,
-        # )
-        # self.puppet_bot_right = InterbotixManipulatorXS(
-        #     robot_model="vx300s",  
-        #     robot_name="follower_right", 
-        #     node=self.node,
-        #     iterative_update_fk=False,
-        # )
-        # if setup_robots:
-        #     self.setup_robots()
+
+        self.puppet_bot_left = InterbotixManipulatorXS(
+            robot_model="vx300s",
+            robot_name="follower_left",
+            node=self.node,
+            iterative_update_fk=False,
+        )
+        self.puppet_bot_right = InterbotixManipulatorXS(
+            robot_model="vx300s",  
+            robot_name="follower_right", 
+            node=self.node,
+            iterative_update_fk=False,
+        )
+        if setup_robots:
+            self.setup_robots()
 
         self.recorder_left = robot_utils.Recorder("left", node = self.node)
         self.recorder_right = robot_utils.Recorder("right", node = self.node)
@@ -108,16 +108,16 @@ class RealEnv:
         return self.image_recorder.get_images()
 
     def set_gripper_pose(self, left_gripper_desired_pos_normalized, right_gripper_desired_pos_normalized):
-        # left_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(left_gripper_desired_pos_normalized)
-        # self.gripper_command.cmd = left_gripper_desired_joint
-        # self.puppet_bot_left.gripper.core.pub_single.publish(self.gripper_command)
+        left_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(left_gripper_desired_pos_normalized)
+        self.gripper_command.cmd = left_gripper_desired_joint
+        self.puppet_bot_left.gripper.core.pub_single.publish(self.gripper_command)
 
-        # right_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(
-        #     right_gripper_desired_pos_normalized
-        # )
-        # self.gripper_command.cmd = right_gripper_desired_joint
-        # self.puppet_bot_right.gripper.core.pub_single.publish(self.gripper_command)
-        return
+        right_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(
+            right_gripper_desired_pos_normalized
+        )
+        self.gripper_command.cmd = right_gripper_desired_joint
+        self.puppet_bot_right.gripper.core.pub_single.publish(self.gripper_command)
+
     def _reset_joints(self):
         robot_utils.move_arms(
             [self.puppet_bot_left, self.puppet_bot_right], [self._reset_position, self._reset_position], move_time=1
@@ -125,13 +125,13 @@ class RealEnv:
 
     def _reset_gripper(self):
         """Set to position mode and do position resets: first open then close. Then change back to PWM mode"""
-        # robot_utils.move_grippers(
-        #     [self.puppet_bot_left, self.puppet_bot_right], [constants.PUPPET_GRIPPER_JOINT_OPEN] * 2, move_time=0.5
-        # )
-        # robot_utils.move_grippers(
-        #     [self.puppet_bot_left, self.puppet_bot_right], [constants.PUPPET_GRIPPER_JOINT_CLOSE] * 2, move_time=1
-        # )
-        return
+        robot_utils.move_grippers(
+            [self.puppet_bot_left, self.puppet_bot_right], [constants.PUPPET_GRIPPER_JOINT_OPEN] * 2, move_time=0.5
+        )
+        robot_utils.move_grippers(
+            [self.puppet_bot_left, self.puppet_bot_right], [constants.PUPPET_GRIPPER_JOINT_CLOSE] * 2, move_time=1
+        )
+
     def get_observation(self):
         obs = collections.OrderedDict()
         obs["qpos"] = self.get_qpos()
@@ -144,12 +144,12 @@ class RealEnv:
         return 0
 
     def reset(self, *, fake=False):
-        # if not fake:
-        #     # Reboot puppet robot gripper motors
-        #     self.puppet_bot_left.core.robot_reboot_motors("single", "gripper", True)
-        #     self.puppet_bot_right.core.robot_reboot_motors("single", "gripper", True)
-        #     self._reset_joints()
-        #     self._reset_gripper()
+        if not fake:
+            # Reboot puppet robot gripper motors
+            self.puppet_bot_left.core.robot_reboot_motors("single", "gripper", True)
+            self.puppet_bot_right.core.robot_reboot_motors("single", "gripper", True)
+            self._reset_joints()
+            self._reset_gripper()
         return dm_env.TimeStep(
             step_type=dm_env.StepType.FIRST, reward=self.get_reward(), discount=None, observation=self.get_observation()
         )
@@ -158,8 +158,8 @@ class RealEnv:
         state_len = int(len(action) / 2)
         left_action = action[:state_len]
         right_action = action[state_len:]
-        # self.puppet_bot_left.arm.set_joint_positions(left_action[:6], blocking=False)
-        # self.puppet_bot_right.arm.set_joint_positions(right_action[:6], blocking=False)
+        self.puppet_bot_left.arm.set_joint_positions(left_action[:6], blocking=False)
+        self.puppet_bot_right.arm.set_joint_positions(right_action[:6], blocking=False)
         self.set_gripper_pose(left_action[-1], right_action[-1])
         time.sleep(constants.DT)
         return dm_env.TimeStep(
@@ -170,8 +170,8 @@ class RealEnv:
 def get_action(master_bot_left, master_bot_right):
     action = np.zeros(14)  # 6 joint + 1 gripper, for two arms
     # Arm actions
-    # action[:6] = master_bot_left.core.joint_states.position[:6]
-    # action[7 : 7 + 6] = master_bot_right.core.joint_states.position[:6]
+    action[:6] = master_bot_left.core.joint_states.position[:6]
+    action[7 : 7 + 6] = master_bot_right.core.joint_states.position[:6]
     # Gripper actions
     action[6] = constants.MASTER_GRIPPER_JOINT_NORMALIZE_FN(master_bot_left.core.joint_states.position[6])
     action[7 + 6] = constants.MASTER_GRIPPER_JOINT_NORMALIZE_FN(master_bot_right.core.joint_states.position[6])
