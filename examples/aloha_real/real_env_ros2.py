@@ -16,7 +16,7 @@ from interbotix_common_modules.common_robot.robot import (
 )
 from examples.aloha_real import constants
 from examples.aloha_real import robot_utils_ros2 as robot_utils
-
+import rclpy
 # This is the reset position that is used by the standard Aloha runtime.
 DEFAULT_RESET_POSITION = [0, -0.96, 1.16, 0, -0.3, 0]
 
@@ -43,12 +43,12 @@ class RealEnv:
                                    "cam_right_wrist": (480x640x3)} # h, w, c, dtype='uint8'
     """
 
-    def __init__(self, init_node, *, reset_position: Optional[List[float]] = None, setup_robots: bool = True):
+    def __init__(self, node, *, reset_position: Optional[List[float]] = None, setup_robots: bool = True):
         # reset_position = START_ARM_POSE[:6]
         self._reset_position = reset_position[:6] if reset_position else DEFAULT_RESET_POSITION
 
-        self.node = create_interbotix_global_node('aloha')
-
+        self.node = node
+        create_interbotix_global_node('aloha')
         self.puppet_bot_left = InterbotixManipulatorXS(
             robot_model="vx300s",
             robot_name="follower_left",
@@ -68,6 +68,8 @@ class RealEnv:
         self.recorder_right = robot_utils.Recorder("right", node = self.node)
         self.image_recorder = robot_utils.ImageRecorder(node = self.node)
         self.gripper_command = JointSingleCommand(name="gripper")
+
+        
 
     def setup_robots(self):
         robot_utils.setup_puppet_bot(self.puppet_bot_left)
@@ -177,5 +179,5 @@ def get_action(master_bot_left, master_bot_right):
     return action
 
 
-def make_real_env(init_node, *, reset_position: Optional[List[float]] = None, setup_robots: bool = True) -> RealEnv:
-    return RealEnv(init_node, reset_position=reset_position, setup_robots=setup_robots)
+def make_real_env(node, *, reset_position: Optional[List[float]] = None, setup_robots: bool = True) -> RealEnv:
+    return RealEnv(node, reset_position=reset_position, setup_robots=setup_robots)
