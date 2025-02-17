@@ -17,6 +17,11 @@ from interbotix_common_modules.common_robot.robot import (
 from examples.aloha_real import constants
 from examples.aloha_real import robot_utils_ros2 as robot_utils
 import rclpy
+from rclpy.node import Node
+from rclpy.task import Future
+from std_srvs.srv import Trigger
+from sensor_msgs.msg import Image, JointState
+
 # This is the reset position that is used by the standard Aloha runtime.
 DEFAULT_RESET_POSITION = [0, -0.96, 1.16, 0, -0.3, 0]
 
@@ -63,17 +68,20 @@ class RealEnv:
         # )
         # if setup_robots:
         #     self.setup_robots()
+        self.node.action_pub = self.node.create_publisher(
+            JointState,
+            'action',
+            10
+        )
+        self.node.reset_cli = self.node.create_client(Trigger, 'reset')
+        while not self.node.reset_cli.wait_for_service(timeout_sec=1.0):
+            self.node.get_logger().info('service not available, waiting again...')
 
         self.recorder_left = robot_utils.Recorder("left", node = self.node)
         self.recorder_right = robot_utils.Recorder("right", node = self.node)
         self.image_recorder = robot_utils.ImageRecorder(node = self.node)
         self.gripper_command = JointSingleCommand(name="gripper")
-
-        
-
-    def setup_robots(self):
-        robot_utils.setup_puppet_bot(self.puppet_bot_left)
-        robot_utils.setup_puppet_bot(self.puppet_bot_right)
+        time.sleep(1)
 
     def get_qpos(self):
         left_qpos_raw = self.recorder_left.qpos
@@ -108,23 +116,30 @@ class RealEnv:
         return self.image_recorder.get_images()
 
     def set_gripper_pose(self, left_gripper_desired_pos_normalized, right_gripper_desired_pos_normalized):
-        # left_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(left_gripper_desired_pos_normalized)
+        # print("Todo set_gripper_pose")
+        left_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(
+            left_gripper_desired_pos_normalized
+        )
+
         # self.gripper_command.cmd = left_gripper_desired_joint
         # self.puppet_bot_left.gripper.core.pub_single.publish(self.gripper_command)
 
-        # right_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(
-        #     right_gripper_desired_pos_normalized
-        # )
+        right_gripper_desired_joint = constants.PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(
+            right_gripper_desired_pos_normalized
+        )
+
         # self.gripper_command.cmd = right_gripper_desired_joint
         # self.puppet_bot_right.gripper.core.pub_single.publish(self.gripper_command)
         return
     def _reset_joints(self):
-        robot_utils.move_arms(
-            [self.puppet_bot_left, self.puppet_bot_right], [self._reset_position, self._reset_position], move_time=1
-        )
+        # Todo add a reset service()
+        print("in _reset_joints ")
+        return
+
 
     def _reset_gripper(self):
         """Set to position mode and do position resets: first open then close. Then change back to PWM mode"""
+        print("in _reset_gripper ")
         # robot_utils.move_grippers(
         #     [self.puppet_bot_left, self.puppet_bot_right], [constants.PUPPET_GRIPPER_JOINT_OPEN] * 2, move_time=0.5
         # )
@@ -144,6 +159,11 @@ class RealEnv:
         return 0
 
     def reset(self, *, fake=False):
+        # Todo add a reset service()
+        # print(" Todo add a reset service() ")
+        
+        # future = self.node.reset_cli.call_async( Trigger.Request() )
+        # rclpy.spin_until_future_complete(self.node, future)
         # if not fake:
         #     # Reboot puppet robot gripper motors
         #     self.puppet_bot_left.core.robot_reboot_motors("single", "gripper", True)
@@ -155,19 +175,29 @@ class RealEnv:
         )
 
     def step(self, action):
+        print("in step")
         state_len = int(len(action) / 2)
         left_action = action[:state_len]
         right_action = action[state_len:]
+        joint_msg = JointState()
+        for i in range( len(action) ):
+            joint_msg.position.append( action[i] )
+
+        self.node.action_pub.publish(joint_msg)
+
+        # print("Todo send joint pose")
+        # print("Todo send gripper pose")
         # self.puppet_bot_left.arm.set_joint_positions(left_action[:6], blocking=False)
         # self.puppet_bot_right.arm.set_joint_positions(right_action[:6], blocking=False)
-        self.set_gripper_pose(left_action[-1], right_action[-1])
-        time.sleep(constants.DT)
+        # self.set_gripper_pose(left_action[-1], right_action[-1])
+        time.sleep(constants.DT * 10)
         return dm_env.TimeStep(
             step_type=dm_env.StepType.MID, reward=self.get_reward(), discount=None, observation=self.get_observation()
         )
 
 
 def get_action(master_bot_left, master_bot_right):
+    print("in get_action")
     action = np.zeros(14)  # 6 joint + 1 gripper, for two arms
     # Arm actions
     # action[:6] = master_bot_left.core.joint_states.position[:6]

@@ -34,13 +34,13 @@ from rclpy.duration import Duration
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.task import Future
+from sensor_msgs.msg import Image, JointState
 
 import numpy as np
 np.set_printoptions(suppress=True,precision=4)
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout, Bool
+from std_srvs.srv import Trigger
 
-# from utils import *
-# from math_tools import *
 import threading
 import time
 
@@ -77,7 +77,9 @@ def opening_ceremony(
         moving_time=0.5
     )
 
-def AlohaRobot(InterbotixRobotNode):
+    return True
+
+class AlohaRobot(InterbotixRobotNode):
     def __init__(self):
         super().__init__('aloha_node')
 
@@ -93,19 +95,62 @@ def AlohaRobot(InterbotixRobotNode):
             node=self,
             iterative_update_fk=False,
         )
-        self.robot_startup(self)
+        
+        # Teleoperation loop
+        self.gripper_left_command = JointSingleCommand(name='gripper')
+        self.gripper_right_command = JointSingleCommand(name='gripper')
 
+        robot_startup(self)
         opening_ceremony(
             self.follower_bot_left,
             self.follower_bot_right,
+        )
+        
+        self.srv = self.create_service(Trigger, 'reset', self.reset_callback)
+        
+        self.action_sub = self.create_subscription(
+            JointState,
+            'action',
+            self.action_callback,
+            10
+        )
+        print("end init")
 
+
+    def reset_callback(self, request, response):
+        print("in reset")
+        response.success = opening_ceremony(
+            self.follower_bot_left,
+            self.follower_bot_right,
         )
 
+        return response
+
+    def action_callback(self, joint_msg):
+        print("in action_callback")
+        goal = np.array(joint_msg.position) 
+        left_action = goal[0:6]
+        right_action = goal[7:13]
+        left_openness = goal[6]
+        right_openness = goal[13]
+        self.follower_bot_left.arm.set_joint_positions(left_action, blocking=False)
+        self.follower_bot_right.arm.set_joint_positions(right_action, blocking=False)
+
+        self.gripper_left_command.cmd = LEADER2FOLLOWER_JOINT_FN(
+            left_openness 
+        )
+        self.gripper_right_command.cmd = LEADER2FOLLOWER_JOINT_FN(
+            right_openness
+        )
+
+        self.follower_bot_left.gripper.core.pub_single.publish(self.gripper_left_command)
+        self.follower_bot_right.gripper.core.pub_single.publish(self.gripper_right_command)
+
 def main() -> None:
-    
-    node = AlohaRobot('aloha')
+    rclpy.init()
+    node = AlohaRobot()
     rclpy.spin(node)
-    robot_shutdown(node)
+    # robot_shutdown(node)
 
 
 if __name__ == '__main__':

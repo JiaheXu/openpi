@@ -91,17 +91,17 @@ class ImageRecorder:
         return self.image_cb(cam_name, data)
 
     def image_cb_cam_low(self, data):
-        print("in call back 2 !!!")
+        # print("in call back 2 !!!")
         cam_name = "cam_low"
         return self.image_cb(cam_name, data)
 
     def image_cb_cam_left_wrist(self, data):
-        print("in call back 3 !!!")
+        # print("in call back 3 !!!")
         cam_name = "cam_left_wrist"
         return self.image_cb(cam_name, data)
 
     def image_cb_cam_right_wrist(self, data):
-        print("in call back 4 !!!")
+        # print("in call back 4 !!!")
         cam_name = "cam_right_wrist"
         return self.image_cb(cam_name, data)
 
@@ -109,20 +109,20 @@ class ImageRecorder:
         image_dict = {}
         for cam_name in self.camera_names:
             while getattr(self, f"{cam_name}_timestamp") <= self.cam_last_timestamps[cam_name]:
-                print("cam_name: ", cam_name)
-                print("timestamp: ", getattr(self, f"{cam_name}_timestamp") )
-                print("last_stamp: ", self.cam_last_timestamps[cam_name] )
+                # print("cam_name: ", cam_name)
+                # print("timestamp: ", getattr(self, f"{cam_name}_timestamp") )
+                # print("last_stamp: ", self.cam_last_timestamps[cam_name] )
                 time.sleep(0.00001)
-            print("cam_name: ", cam_name)
-            print("timestamp: ", getattr(self, f"{cam_name}_timestamp") )
-            print("last_stamp: ", self.cam_last_timestamps[cam_name] )
+            # print("cam_name: ", cam_name)
+            # print("timestamp: ", getattr(self, f"{cam_name}_timestamp") )
+            # print("last_stamp: ", self.cam_last_timestamps[cam_name] )
             # raise
             rgb_image = getattr(self, f"{cam_name}_rgb_image")
             depth_image = getattr(self, f"{cam_name}_depth_image")
             self.cam_last_timestamps[cam_name] = getattr(self, f"{cam_name}_timestamp")
             image_dict[cam_name] = rgb_image
             image_dict[f"{cam_name}_depth"] = depth_image
-        print()
+        # print()
         return image_dict
 
     def print_diagnostics(self):

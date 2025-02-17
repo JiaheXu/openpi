@@ -97,12 +97,9 @@ class Runtime(Node):
         # for _ in range(self._num_episodes):
         while rclpy.ok():
             self.get_logger().info('Timer callback started')
-            time.sleep(1)  # Simulate long computation
+            # time.sleep(1)  # Simulate long computation
             self._run_episode()
-            self.get_logger().info('Timer callback ended')
-
-        # # Final reset, this is important for real environments to move the robot to its home position.
-        # self._environment.reset()
+        self._environment.reset()
 
 
     def mark_episode_complete(self) -> None:
