@@ -64,7 +64,7 @@ class Runtime(Node):
 
         subscribers=[]
 
-        max_hz=50
+        max_hz=5
 
         # print("self._environment: ", self._environment )
 

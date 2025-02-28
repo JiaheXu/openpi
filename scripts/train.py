@@ -25,7 +25,9 @@ import openpi.training.optimizer as _optimizer
 import openpi.training.sharding as sharding
 import openpi.training.utils as training_utils
 import openpi.training.weight_loaders as _weight_loaders
+from colorama import Fore, Back, Style, init
 
+init(autoreset=True) 
 
 def init_logging():
     """Custom logging format for better readability."""
@@ -101,7 +103,7 @@ def init_train_state(
         params = nnx.state(model)
         # Convert frozen params to bfloat16.
         params = nnx_utils.state_map(params, config.freeze_filter, lambda p: p.replace(p.value.astype(jnp.bfloat16)))
-
+        # print(Fore.RED +  "params.filter(config.trainable_filter: ", params.filter(config.trainable_filter ))
         return training_utils.TrainState(
             step=0,
             params=params,
@@ -224,11 +226,12 @@ def main(config: _config.TrainConfig):
     )
     data_iter = iter(data_loader)
     batch = next(data_iter)
-    logging.info(f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}")
-
+    # logging.info(f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}")
+    # print(Fore.RED + "line 229!!!!!!!!!!!!!!!!!!!!!")
+    # print("config: ", config)
     train_state, train_state_sharding = init_train_state(config, init_rng, mesh, resume=resuming)
     jax.block_until_ready(train_state)
-    logging.info(f"Initialized train state:\n{training_utils.array_tree_to_info(train_state.params)}")
+    # logging.info(f"Initialized train state:\n{training_utils.array_tree_to_info(train_state.params)}")
 
     if resuming:
         train_state = _checkpoints.restore_state(checkpoint_manager, train_state, data_loader)

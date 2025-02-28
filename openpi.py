@@ -44,6 +44,19 @@ from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayou
 import threading
 import time
 
+new_action = None
+current_action = None
+follower_bot_left = None
+follower_bot_right = None
+gripper_left_command = None
+gripper_right_command = None
+node = None
+current_idx = 0
+save_data_idx = 0
+current_traj = []
+
+lock = threading.Lock()
+
 def opening_ceremony(
     follower_bot_left: InterbotixManipulatorXS,
     follower_bot_right: InterbotixManipulatorXS,
@@ -65,6 +78,7 @@ def opening_ceremony(
 
     # move arms to starting position
     start_arm_qpos = START_ARM_POSE[:6]
+    start_arm_qpos[4] += 0.4
     move_arms(
         [follower_bot_left, follower_bot_right],
         [start_arm_qpos] * 2,
@@ -73,38 +87,74 @@ def opening_ceremony(
     # move grippers to starting position
     move_grippers(
         [follower_bot_left, follower_bot_right],
-        [1.62, 1.62],
+        [FOLLOWER_GRIPPER_JOINT_CLOSE, FOLLOWER_GRIPPER_JOINT_CLOSE],
         moving_time=0.5
     )
 
-def AlohaRobot(InterbotixRobotNode):
-    def __init__(self):
-        super().__init__('aloha_node')
 
-        self.follower_bot_left = InterbotixManipulatorXS(
-            robot_model='vx300s',
-            robot_name='follower_left',
-            node=self,
-            iterative_update_fk=False,
-        )
-        self.follower_bot_right = InterbotixManipulatorXS(
-            robot_model='vx300s',
-            robot_name='follower_right',
-            node=self,
-            iterative_update_fk=False,
-        )
-        self.robot_startup(self)
+def callback():
+    follower_bot_left.arm.set_joint_positions(left_ik_result, blocking=False)
+    follower_bot_right.arm.set_joint_positions(right_ik_result, blocking=False)
 
-        opening_ceremony(
-            self.follower_bot_left,
-            self.follower_bot_right,
+    current_traj.append([current_left_joints, current_right_joints, left_ik_result, right_ik_result])
 
-        )
+    gripper_left_command.cmd = LEADER2FOLLOWER_JOINT_FN(
+        left_openness
+    )
+    gripper_right_command.cmd = LEADER2FOLLOWER_JOINT_FN(
+        right_openness
+    )
+    # print("gripper: ", data_point["right_pos"][6])
+    follower_bot_left.gripper.core.pub_single.publish(gripper_left_command)
+    follower_bot_right.gripper.core.pub_single.publish(gripper_right_command)
 
 def main() -> None:
     
-    node = AlohaRobot('aloha')
+    global current_action
+    global new_action
+    global follower_bot_left
+    global follower_bot_right
+    global gripper_left_command
+    global gripper_right_command
+    global node
+
+    node = create_interbotix_global_node('aloha')
+    # node = create_bimanual_global_node('bimanual')
+
+    follower_bot_left = InterbotixManipulatorXS(
+        robot_model='vx300s',
+        robot_name='follower_left',
+        node=node,
+        iterative_update_fk=False,
+    )
+    follower_bot_right = InterbotixManipulatorXS(
+        robot_model='vx300s',
+        robot_name='follower_right',
+        node=node,
+        iterative_update_fk=False,
+    )
+    robot_startup(node)
+
+    opening_ceremony(
+        follower_bot_left,
+        follower_bot_right,
+    )
+
+    # press_to_start(leader_bot_left, leader_bot_right)
+
+    # Teleoperation loop
+    gripper_left_command = JointSingleCommand(name='gripper')
+    gripper_right_command = JointSingleCommand(name='gripper')
+
+    node.bimanual_ee_cmd_sub = node.create_subscription( Float32MultiArray, "bimanual_ee_cmd", callback, 1)
+    idx = 0
+    timer_period = 0.1  # second
+    node.timer = node.create_timer(timer_period, timer_callback)
+
+    node.state_publisher = node.create_publisher(Bool, 'controller_finished', 1)
+
     rclpy.spin(node)
+
     robot_shutdown(node)
 
 

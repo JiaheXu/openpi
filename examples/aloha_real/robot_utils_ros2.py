@@ -25,14 +25,14 @@ class ImageRecorder:
 
         self.camera_names = [
             "cam_high", 
-            "cam_low", 
+            # "cam_low", 
             "cam_left_wrist", 
             "cam_right_wrist"
         ]
 
         self.topic_names = [
             "camera_1/left_image", 
-            "camera_1/left_image", 
+            # "camera_1/left_image", 
             "cam_left_wrist/color/image_rect_raw", 
             "cam_right_wrist/color/image_rect_raw",
         ]

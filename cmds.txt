@@ -1,1 +1,0 @@
-python3 scripts/serve_policy.py --env ALOHA --default_prompt='stack blocks'
