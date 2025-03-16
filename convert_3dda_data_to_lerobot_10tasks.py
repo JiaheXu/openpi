@@ -203,6 +203,7 @@ def populate_dataset(
     files: list[Path],
     task: str,
     episodes: list[int] | None = None,
+    task_idx: int = 0,
 ) -> LeRobotDataset:
 
 
@@ -232,7 +233,7 @@ def populate_dataset(
 
             dataset.add_frame(frame)
 
-        dataset.save_episode(task=task)
+        dataset.save_episode(task=task) #,task_index=task_idx)
 
     return dataset
 
@@ -249,9 +250,6 @@ def port_mobaloha(
     mode: Literal["video", "image"] = "image",
     dataset_config: DatasetConfig = DEFAULT_DATASET_CONFIG,
 ):
-    raw_dir = Path( "/ws/data/raw_demo/" + task + "/traj/" )
-
-    files = sorted(raw_dir.glob("*.npy"))
 
     dataset = create_empty_dataset(
         repo_id,
@@ -261,15 +259,24 @@ def port_mobaloha(
         has_velocity=False,
         dataset_config=dataset_config,
     )
-    dataset = populate_dataset(
-        dataset,
-        files,
-        task=task,
-        episodes=episodes,
-    )
+    tasks = ['handover_block', 'insert_battery', 'insert_marker_into_cup', 'lift_ball', 'open_marker', 'pickup_plate', 'stack_blocks', 'stack_bowls', 'straighten_rope', 'ziploc']
+    for task_idx, task in enumerate(tasks):
+
+        raw_dir = Path( "/ws/data/raw_demo/" + task + "/traj/" )
+        files = sorted(raw_dir.glob("*.npy"))
+
+
+        dataset = populate_dataset(
+            dataset,
+            files,
+            task=task,
+            episodes=episodes,
+            task_idx = task_idx
+        )
+    print("dataset.tasks: ", dataset.meta.tasks)
     dataset.consolidate()
 
-    # dataset.push_to_hub()
+    dataset.push_to_hub()
 
 if __name__ == "__main__":
     tyro.cli(port_mobaloha)

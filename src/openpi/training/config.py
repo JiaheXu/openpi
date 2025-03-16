@@ -381,7 +381,7 @@ class TrainConfig:
     # Base directory for config assets (e.g., norm stats).
     assets_base_dir: str = "./assets"
     # Base directory for checkpoints.
-    checkpoint_base_dir: str = "./checkpoints"
+    checkpoint_base_dir: str = "/data/user_data/jiahex/checkpoints"
 
     # Random seed that will be used by random generators during training.
     seed: int = 42
@@ -391,7 +391,7 @@ class TrainConfig:
     # will increase memory and CPU usage.
     num_workers: int = 2
     # Number of train steps (batches) to run.
-    num_train_steps: int = 30_000
+    num_train_steps: int = 20_000
 
     # How often (in steps) to log training metrics.
     log_interval: int = 100
@@ -950,6 +950,44 @@ _CONFIGS = [
         weight_loader=weight_loaders.CheckpointWeightLoader("s3://openpi-assets/checkpoints/pi0_base/params"),
         num_train_steps=20_000,
     ),
+
+
+    TrainConfig(
+        name="pi0_10tasks",
+        model=pi0.Pi0Config(),
+        data=LeRobotMobalohaDataConfig(
+            repo_id="JiaheXu98/10tasks",
+            assets=AssetsConfig(
+                assets_dir="s3://openpi-assets/checkpoints/pi0_base/assets",
+                # asset_id="trossen",
+                asset_id="trossen_mobile",
+            ),
+            default_prompt="",
+            
+            repack_transforms=_transforms.Group(
+                inputs=[
+                    _transforms.RepackTransform(
+                        {
+                            "images": {
+                                "cam_high": "observation.images.cam_high",
+                                "cam_left_wrist": "observation.images.cam_left_wrist",
+                                "cam_right_wrist": "observation.images.cam_right_wrist",
+                            },
+                            "state": "observation.state",
+                            "actions": "action",
+                        }
+                    )
+                ]
+            ),
+            base_config=DataConfig(
+                local_files_only=False,  # Set to True for local-only datasets.
+                prompt_from_task=True,
+            ),
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader("s3://openpi-assets/checkpoints/pi0_base/params"),
+        num_train_steps=50_000,
+    ),
+
     #######################################################################################################################################
 
 

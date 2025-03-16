@@ -58,21 +58,27 @@ class Args:
 # Default checkpoints that should be used for each environment.
 DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
     EnvMode.ALOHA: Checkpoint(
-        config="pi0_aloha",
-        dir="s3://openpi-assets/checkpoints/pi0_base",
+        config="pi0_ziploc",
+        dir="/ws/babel_log/checkpoints/pi0_stack_blocks/stack_blocks/19999",
     ),
-    EnvMode.ALOHA_SIM: Checkpoint(
-        config="pi0_aloha_sim",
-        dir="s3://openpi-assets/checkpoints/pi0_aloha_sim",
-    ),
-    EnvMode.DROID: Checkpoint(
-        config="pi0_fast_droid",
-        dir="s3://openpi-assets/checkpoints/pi0_fast_droid",
-    ),
-    EnvMode.LIBERO: Checkpoint(
-        config="pi0_fast_libero",
-        dir="s3://openpi-assets/checkpoints/pi0_fast_libero",
-    ),
+
+
+    # EnvMode.ALOHA: Checkpoint(
+    #     config="pi0_aloha",
+    #     dir="s3://openpi-assets/checkpoints/pi0_base",
+    # ),
+    # EnvMode.ALOHA_SIM: Checkpoint(
+    #     config="pi0_aloha_sim",
+    #     dir="s3://openpi-assets/checkpoints/pi0_aloha_sim",
+    # ),
+    # EnvMode.DROID: Checkpoint(
+    #     config="pi0_fast_droid",
+    #     dir="s3://openpi-assets/checkpoints/pi0_fast_droid",
+    # ),
+    # EnvMode.LIBERO: Checkpoint(
+    #     config="pi0_fast_libero",
+    #     dir="s3://openpi-assets/checkpoints/pi0_fast_libero",
+    # ),
 }
 
 
