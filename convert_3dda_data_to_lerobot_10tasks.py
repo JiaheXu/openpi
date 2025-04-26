@@ -260,7 +260,7 @@ def port_mobaloha(
 
 
     from huggingface_hub import login
-    login("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")
+
     dataset = create_empty_dataset(
         repo_id,
         robot_type="mobile_aloha",

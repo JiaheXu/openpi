@@ -8,7 +8,7 @@ python3convert_3dda_data_to_lerobot_10tasks.py --raw-dir . --repo-id JiaheXu98/1
 
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python3 scripts/train.py pi0_mobaloha --exp-name=pickup_plate --overwrite
 
-export WANDB_API_KEY=ca2ebcfcd0138634c791073c44260f2b86764de1
+
 
 
 
