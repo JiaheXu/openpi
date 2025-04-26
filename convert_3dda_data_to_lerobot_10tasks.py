@@ -151,6 +151,7 @@ def load_raw_images_per_camera(ep: h5py.File, cameras: list[str]) -> dict[str, n
 
 def load_raw_episode_data(
     ep_path: Path,
+    openness = 0.15
 ) -> tuple[dict[str, np.ndarray], torch.Tensor, torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
     
     data = np.load(ep_path, allow_pickle = True)
@@ -172,7 +173,13 @@ def load_raw_episode_data(
         state.append( np.concatenate( (left_state, right_state)) )
 
         left_action = point['left_controller_pos'][0:7]
+        # print("left_action: ", left_action.shape)
+        left_action[6] = int( point['left_controller_pos'][6] > openness)
+
+        # print("left_action: ", left_action)
         right_action = point['right_controller_pos'][0:7]
+        right_action[6] = int( point['right_controller_pos'][6] > openness)
+
         action.append( np.concatenate( (left_action, right_action)) )
 
         head_cam.append( np.transpose(point['head_rgb'],(2,0,1) ) )
@@ -251,6 +258,9 @@ def port_mobaloha(
     dataset_config: DatasetConfig = DEFAULT_DATASET_CONFIG,
 ):
 
+
+    from huggingface_hub import login
+    login("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")
     dataset = create_empty_dataset(
         repo_id,
         robot_type="mobile_aloha",
@@ -259,7 +269,7 @@ def port_mobaloha(
         has_velocity=False,
         dataset_config=dataset_config,
     )
-    tasks = ['handover_block', 'insert_battery', 'insert_marker_into_cup', 'lift_ball', 'open_marker', 'pickup_plate', 'stack_blocks', 'stack_bowls', 'straighten_rope', 'ziploc']
+    tasks = ['handover_block','insert_battery', 'insert_marker_into_cup', 'lift_ball', 'open_marker', 'pickup_plate', 'stack_blocks', 'stack_bowls', 'straighten_rope', 'ziploc']
     for task_idx, task in enumerate(tasks):
 
         raw_dir = Path( "/ws/data/raw_demo/" + task + "/traj/" )

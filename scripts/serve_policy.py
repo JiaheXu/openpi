@@ -57,12 +57,26 @@ class Args:
 
 # Default checkpoints that should be used for each environment.
 DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
+    # EnvMode.ALOHA: Checkpoint(
+    #     config="pi0_ziploc",
+    #     dir="/ws/babel_log/checkpoints/pi0_stack_blocks/stack_blocks/19999",
+    # ),
+
+    # EnvMode.ALOHA: Checkpoint(
+    #     config="pi0_pickup_plate",
+    #     dir="/ws/openpi/checkpoints/pi0_pickup_plate/pickup_plate/5000",
+    # ),
+
+    # EnvMode.ALOHA: Checkpoint(
+    #     config="pi0_straighten_rope",
+    #     dir="/ws/openpi/checkpoints/pi0_straighten_rope/straighten_rope/5000",
+    # ),
+
     EnvMode.ALOHA: Checkpoint(
-        config="pi0_ziploc",
-        dir="/ws/babel_log/checkpoints/pi0_stack_blocks/stack_blocks/19999",
+        config="pi0_10tasks",
+        # dir="/ws/openpi/checkpoints/pi0_10tasks/10tasks/5000",
+        dir="/ws/openpi/checkpoints/10tasks_binary/5000",
     ),
-
-
     # EnvMode.ALOHA: Checkpoint(
     #     config="pi0_aloha",
     #     dir="s3://openpi-assets/checkpoints/pi0_base",

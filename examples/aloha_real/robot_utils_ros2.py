@@ -31,10 +31,10 @@ class ImageRecorder:
         ]
 
         self.topic_names = [
-            "camera_1/left_image", 
+            "camera_1/left_image/processed", 
             # "camera_1/left_image", 
-            "cam_left_wrist/color/image_rect_raw", 
-            "cam_right_wrist/color/image_rect_raw",
+            "cam_left_wrist/color/image_rect_raw/processed", 
+            "cam_right_wrist/color/image_rect_raw/processed",
         ]
 
 
@@ -62,6 +62,7 @@ class ImageRecorder:
         time.sleep(0.5)
 
     def image_cb(self, cam_name, data):
+        
         setattr(
             self,
             f"{cam_name}_rgb_image",

@@ -1,0 +1,40 @@
+python3 scripts/serve_policy.py --env ALOHA --default_prompt='pickup_plate'
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/stack_blocks --task stack_blocks
+
+
+python3convert_3dda_data_to_lerobot_10tasks.py --raw-dir . --repo-id JiaheXu98/10tasks_binary2
+
+
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python3 scripts/train.py pi0_mobaloha --exp-name=pickup_plate --overwrite
+
+export WANDB_API_KEY=ca2ebcfcd0138634c791073c44260f2b86764de1
+
+
+
+
+
+
+
+
+
+
+
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/stack_blocks --task stack_blocks
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/close_marker --task close_marker
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/handover_block --task handover_block
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/insert_battery --task insert_battery
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/insert_marker_into_cup --task insert_marker_into_cup
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/lift_ball --task lift_ball
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/open_marker --task open_marker
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/pickup_plate --task pickup_plate
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/stack_bowls --task stack_bowls
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/straighten_rope --task straighten_rope
+
+python3 convert_3dda_data_to_lerobot.py --raw-dir . --repo-id JiaheXu98/ziploc --task ziploc

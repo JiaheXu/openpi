@@ -1,6 +1,6 @@
 import dataclasses
 import logging
-
+import torch
 from openpi_client import action_chunk_broker
 from openpi_client import websocket_client_policy as _websocket_client_policy
 # from openpi_client.runtime_ros2 import runtime as _runtime
@@ -139,10 +139,16 @@ class Runtime(Node):
     def _step(self) -> None:
         """A single step of the runtime loop."""
         observation = self._environment.get_observation()
+
+        torch.cuda.synchronize()
+        start = time.time()
         action = self._agent.get_action(observation)
         print("action: ", action)
-        self._environment.apply_action(action)
+        end = time.time()
+        print("3dda took: ", end - start)
 
+        self._environment.apply_action(action)
+        # time.sleep(0.1)
         for subscriber in self._subscribers:
             subscriber.on_step(observation, action)
 

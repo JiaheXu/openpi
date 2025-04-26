@@ -1030,7 +1030,7 @@ _CONFIGS = [
         name="pi0_10tasks",
         model=pi0.Pi0Config(),
         data=LeRobotMobalohaDataConfig(
-            repo_id="JiaheXu98/10tasks",
+            repo_id="JiaheXu98/10tasks_binary2",
             assets=AssetsConfig(
                 assets_dir="s3://openpi-assets/checkpoints/pi0_base/assets",
                 # asset_id="trossen",
@@ -1059,7 +1059,7 @@ _CONFIGS = [
             ),
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("s3://openpi-assets/checkpoints/pi0_base/params"),
-        num_train_steps=50_000,
+        num_train_steps=30_000,
     ),
 
     #######################################################################################################################################

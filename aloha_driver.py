@@ -44,9 +44,16 @@ from std_srvs.srv import Trigger
 import threading
 import time
 
+from rclpy.duration import Duration
+from rclpy.constants import S_TO_NS
+CONTROL_DT = 0.1 #15hz
+CONTROL_DT_DURATION = Duration(seconds=0, nanoseconds= CONTROL_DT * S_TO_NS)
+SLEEP_DT_DURATION = Duration(seconds=0, nanoseconds= S_TO_NS)
+
 def opening_ceremony(
     follower_bot_left: InterbotixManipulatorXS,
     follower_bot_right: InterbotixManipulatorXS,
+    initial_pose,
 ) -> None:
     """Move all 4 robots to a pose where it is easy to start demonstration."""
     # reboot gripper motors, and set operating modes for all motors
@@ -65,9 +72,15 @@ def opening_ceremony(
 
     # move arms to starting position
     start_arm_qpos = START_ARM_POSE[:6]
+    # start_poses = [ 
+    #     # [-0.42644668, -0.10124274,  0.58444667, -0.59518456,  0.641204  , 0.3666214],
+    #     [-0.42644668, -0.50124274,  0.50444667, -0.11518456,  0.741204  , 0.3666214],
+    #     [ 0.20190297, -0.61512631,  0.50467968,  0.11965051,  0.78539819, -0.03067962]
+    # ]
+    start_poses = initial_pose
     move_arms(
         [follower_bot_left, follower_bot_right],
-        [start_arm_qpos] * 2,
+        start_poses,
         moving_time=4.0,
     )
     # move grippers to starting position
@@ -101,10 +114,19 @@ class AlohaRobot(InterbotixRobotNode):
         self.gripper_right_command = JointSingleCommand(name='gripper')
 
         robot_startup(self)
+
+
+        task_name = 'ziploc'
+        data_index = 8
+        episode = np.load(f"/home/jiahe/data/raw_demo/{task_name}/traj/{data_index}.npy", allow_pickle = True)
+        inital_pose = [ episode[0]['left_pos'][0:6], episode[0]['right_pos'][0:6] ]
         opening_ceremony(
             self.follower_bot_left,
             self.follower_bot_right,
+            inital_pose,
         )
+
+   
         
         self.srv = self.create_service(Trigger, 'reset', self.reset_callback)
         
@@ -112,7 +134,7 @@ class AlohaRobot(InterbotixRobotNode):
             JointState,
             'action',
             self.action_callback,
-            10
+            1
         )
         print("end init")
 
@@ -133,6 +155,18 @@ class AlohaRobot(InterbotixRobotNode):
         right_action = goal[7:13]
         left_openness = goal[6]
         right_openness = goal[13]
+        
+        threshold = 0.5
+        if(left_openness < threshold):
+            left_openness = 0.0
+        else:
+            left_openness = 1.0
+
+        if(right_openness < threshold):
+            right_openness = 0.0
+        else:
+            right_openness = 1.0
+
         self.follower_bot_left.arm.set_joint_positions(left_action, blocking=False)
         self.follower_bot_right.arm.set_joint_positions(right_action, blocking=False)
 
@@ -145,6 +179,8 @@ class AlohaRobot(InterbotixRobotNode):
 
         self.follower_bot_left.gripper.core.pub_single.publish(self.gripper_left_command)
         self.follower_bot_right.gripper.core.pub_single.publish(self.gripper_right_command)
+        time.sleep(0.1)
+        # get_interbotix_global_node().get_clock().sleep_for(CONTROL_DT_DURATION)
 
 def main() -> None:
     rclpy.init()
